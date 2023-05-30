@@ -71,11 +71,11 @@ abstract class Model extends BaseModel
     }
 
     /**
-     * //TODO: Dusan HELPPPPPPPPP
+     * Create a new Scylla Timestamp with the current time
      */
     public function freshTimestamp()
     {
-        return new Timestamp();
+        return new Timestamp(time(), 0);
     }
 
     /**
@@ -97,13 +97,16 @@ abstract class Model extends BaseModel
     }
 
     /**
-     * @inheritdoc
+     * Return a Scylla Timestamp as DateTime object.
+     *
+     * @param  mixed  $value
+     * @return Carbon
      */
     protected function asDateTime($value)
     {
         // Convert UTCDateTime instances.
         if ($value instanceof Timestamp || $value instanceof Date) {
-            return Carbon::instance($value->toDateTime());
+            return Carbon::createFromTimestamp($value->time());
         }
 
         return parent::asDateTime($value);
