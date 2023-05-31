@@ -56,6 +56,7 @@ abstract class Model extends BaseModel
 
 
     public $timestamps = false;
+
     /**
      * @inheritdoc
      */
@@ -99,17 +100,17 @@ abstract class Model extends BaseModel
     /**
      * Return a Scylla Timestamp as DateTime object.
      *
-     * @param  mixed  $value
+     * @param mixed $value
      * @return Carbon
      */
     protected function asDateTime($value)
     {
         // Convert UTCDateTime instances.
-        if ($value instanceof Timestamp || $value instanceof Date) {
-            return Carbon::createFromTimestamp($value->time());
-        }
-
-        return parent::asDateTime($value);
+        return match (get_class($value)) {
+            '\Cassandra\Timestamp' => Carbon::createFromTimestamp($value->time()),
+            '\Cassandra\Date' => Carbon::createFromTimestamp($value->seconds()),
+            default => parent::asDateTime($value)
+        };
     }
 
     /**
@@ -176,8 +177,8 @@ abstract class Model extends BaseModel
     /**
      * Create a new model instance that is existing.
      *
-     * @param  array  $attributes
-     * @param  string|null  $connection
+     * @param array $attributes
+     * @param string|null $connection
      * @return static
      */
     public function newFromBuilder($attributes = [], $connection = null)
@@ -201,7 +202,7 @@ abstract class Model extends BaseModel
      */
     public function originalIsEquivalent($key)
     {
-        if (! array_key_exists($key, $this->original)) {
+        if (!array_key_exists($key, $this->original)) {
             return false;
         }
 
@@ -235,11 +236,11 @@ abstract class Model extends BaseModel
             return $this->fromEncryptedString($attribute) === $this->fromEncryptedString($original);
         } elseif ($this->isCassandraValueObject($attribute)) {
             return $this->valueFromCassandraObject($attribute) ===
-            $this->valueFromCassandraObject($original);
+                $this->valueFromCassandraObject($original);
         }
 
         return is_numeric($attribute) && is_numeric($original)
-            && strcmp((string) $attribute, (string) $original) === 0;
+            && strcmp((string)$attribute, (string)$original) === 0;
     }
 
     /**
