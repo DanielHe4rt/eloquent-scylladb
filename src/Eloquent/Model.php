@@ -73,10 +73,11 @@ abstract class Model extends BaseModel
 
     /**
      * Create a new Scylla Timestamp with the current time
+     * @return Timestamp
      */
     public function freshTimestamp()
     {
-        return new Timestamp(time(), 0);
+        return new Timestamp(seconds: time(), microseconds: 0);
     }
 
     /**
